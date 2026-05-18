@@ -1,0 +1,1305 @@
+<!DOCTYPE html>
+<html lang="hu">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MAILVOID</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+<style>
+:root {
+  --navy:         #04061a;
+  --blue-acc:     #2a4de8;
+  --purple-mid:   #3d1fa0;
+  --purple-acc:   #7c3aed;
+  --purple-light: #a78bfa;
+  --purple-glow:  #c4b5fd;
+  --cyan:         #38bdf8;
+  --white:        #eeeeff;
+  --white-muted:  #6b6b9a;
+  --border:       rgba(124,58,237,0.18);
+  --border-hi:    rgba(124,58,237,0.55);
+  --success:      #22d3a5;
+  --danger:       #f43f5e;
+  --grid:         rgba(42,77,232,0.055);
+
+  /* liquid glass */
+  --glass-bg:     rgba(12,16,52,0.45);
+  --glass-border: rgba(255,255,255,0.07);
+  --glass-blur:   18px;
+  --glass-shadow: 0 8px 40px rgba(0,0,0,0.45), inset 0 1px 0 rgba(255,255,255,0.06);
+}
+
+*{box-sizing:border-box;margin:0;padding:0;}
+
+body {
+  background: var(--navy);
+  color: var(--white);
+  font-family: 'Inter', sans-serif;
+  min-height: 100vh;
+  overflow-x: hidden;
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+/* scrollbart elrejtjuk hiszen ronda */
+*::-webkit-scrollbar { display: none; }
+* { -ms-overflow-style: none; }
+* { scrollbar-width: none; }
+
+/* video hatter*/
+.bg-video-wrap {
+  position: fixed; inset: 0; z-index: -3;
+  overflow: hidden;
+}
+.bg-video-wrap video {
+  width: 100%; height: 100%; object-fit: cover;
+  filter: blur(14px) brightness(.38) saturate(1.4);
+  transform: scale(1.1);
+}
+.bg-overlay {
+  position: fixed; inset: 0; z-index: -2;
+  background: linear-gradient(135deg,
+    rgba(15,20,70,.6),
+    rgba(60,20,110,.5),
+    rgba(8,10,35,.75));
+}
+body::before {
+  content: ''; position: fixed; inset: 0; z-index: 0; pointer-events: none;
+  background-image:
+    linear-gradient(var(--grid) 1px, transparent 1px),
+    linear-gradient(90deg, var(--grid) 1px, transparent 1px);
+  background-size: 44px 44px;
+}
+.orb {
+  position: fixed; border-radius: 50%; pointer-events: none; z-index: 0;
+  filter: blur(80px);
+}
+.orb1 { top:-20%; left:-10%; width:55%; height:55%; background:radial-gradient(ellipse,rgba(124,58,237,0.14),transparent 70%); }
+.orb2 { bottom:-18%; right:-8%; width:50%; height:50%; background:radial-gradient(ellipse,rgba(42,77,232,0.12),transparent 70%); }
+.orb3 { top:40%; left:55%; width:30%; height:30%; background:radial-gradient(ellipse,rgba(56,189,248,0.07),transparent 70%); }
+
+/* betolto screen */
+#loading-screen {
+  position: fixed; inset: 0; z-index: 1000;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  background: var(--navy);
+  transition: opacity .6s ease, visibility .6s ease;
+}
+#loading-screen.hide { opacity: 0; visibility: hidden; }
+
+.loader-logo {
+  font-family: 'Space Mono', monospace;
+  font-size: 2.2rem; font-weight: 700;
+  letter-spacing: .18em;
+  color: var(--white);
+  margin-bottom: 2.5rem;
+}
+.loader-logo span { color: var(--purple-light); }
+
+.loader-bar-wrap {
+  width: 220px; height: 2px;
+  background: rgba(124,58,237,0.15);
+  border-radius: 2px; overflow: hidden;
+}
+.loader-bar {
+  height: 100%;
+  background: linear-gradient(90deg, var(--purple-acc), var(--cyan));
+  border-radius: 2px;
+  animation: loadbar 1.6s cubic-bezier(.4,0,.2,1) forwards;
+}
+@keyframes loadbar { from{width:0} to{width:100%} }
+
+.loader-sub {
+  margin-top: 1.1rem;
+  font-size: .72rem;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  color: var(--white-muted);
+  font-family: 'Space Mono', monospace;
+  animation: pulse 1.4s ease-in-out infinite;
+}
+@keyframes pulse { 0%,100%{opacity:.4} 50%{opacity:1} }
+
+/* Udv screen */
+#welcome-screen {
+  position: fixed; inset: 0; z-index: 900;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  padding: 2rem;
+  opacity: 0; visibility: hidden;
+  transition: opacity .5s ease, visibility .5s ease;
+}
+#welcome-screen.show { opacity: 1; visibility: visible; }
+
+.welcome-glass {
+  background: var(--glass-bg);
+  backdrop-filter: blur(var(--glass-blur));
+  -webkit-backdrop-filter: blur(var(--glass-blur));
+  border: 1px solid var(--glass-border);
+  border-top: 1px solid rgba(255,255,255,0.13);
+  box-shadow: var(--glass-shadow);
+  border-radius: 28px;
+  padding: 3.5rem 4rem;
+  max-width: 520px;
+  width: 100%;
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+}
+.welcome-glass::before {
+  content: ''; position: absolute;
+  top: -60px; left: -60px; width: 200px; height: 200px;
+  background: radial-gradient(circle, rgba(124,58,237,0.18) 0%, transparent 70%);
+  pointer-events: none;
+}
+.welcome-glass::after {
+  content: ''; position: absolute;
+  bottom: -40px; right: -40px; width: 160px; height: 160px;
+  background: radial-gradient(circle, rgba(56,189,248,0.1) 0%, transparent 70%);
+  pointer-events: none;
+}
+
+.wlc-icon {
+  width: 72px; height: 72px; border-radius: 18px;
+  background: linear-gradient(135deg, var(--purple-mid), var(--blue-acc));
+  display: flex; align-items: center; justify-content: center;
+  margin: 0 auto 1.8rem;
+  box-shadow: 0 8px 32px rgba(124,58,237,0.35);
+  font-size: 1.8rem; color: white;
+}
+.wlc-title {
+  font-family: 'Space Mono', monospace;
+  font-size: 1.9rem; font-weight: 700;
+  letter-spacing: .14em; margin-bottom: .7rem;
+}
+.wlc-title span { color: var(--purple-light); }
+.wlc-sub {
+  color: var(--white-muted); font-size: .88rem;
+  line-height: 1.65; margin-bottom: 2.4rem;
+}
+.wlc-features {
+  display: flex; gap: 1rem; justify-content: center;
+  margin-bottom: 2.5rem; flex-wrap: wrap;
+}
+.wlc-feat {
+  display: flex; align-items: center; gap: 7px;
+  background: rgba(124,58,237,0.1);
+  border: 1px solid rgba(124,58,237,0.2);
+  border-radius: 8px; padding: 7px 13px;
+  font-size: .75rem; color: var(--purple-glow);
+}
+.wlc-feat i { color: var(--purple-light); font-size: .8rem; }
+.wlc-btn {
+  width: 100%; padding: 15px;
+  background: linear-gradient(135deg, var(--purple-mid), var(--blue-acc));
+  border: none; border-radius: 13px; color: white;
+  font-family: 'Space Mono', monospace; font-size: .82rem;
+  font-weight: 700; letter-spacing: .1em; cursor: pointer;
+  position: relative; overflow: hidden; transition: all .25s;
+  box-shadow: 0 4px 24px rgba(124,58,237,0.3);
+}
+.wlc-btn:hover { transform: translateY(-2px); box-shadow: 0 8px 32px rgba(124,58,237,0.45); }
+.wlc-btn i { margin-right: 9px; }
+
+/* Titlebar */
+.titlebar {
+  -webkit-app-region: drag; app-region: drag;
+  height: 38px;
+  background: rgba(4,6,26,0.88);
+  backdrop-filter: blur(20px);
+  border-bottom: 1px solid rgba(255,255,255,0.05);
+  display: flex; align-items: center;
+  padding: 0 18px; gap: 10px;
+  position: sticky; top: 0; z-index: 100;
+}
+.titlebar-logo {
+  font-family: 'Space Mono', monospace;
+  font-size: .7rem; font-weight: 700;
+  letter-spacing: .18em; color: var(--white); pointer-events: none;
+}
+.titlebar-logo span { color: var(--purple-light); }
+.titlebar-dot {
+  width: 7px; height: 7px; border-radius: 50%;
+  background: var(--purple-acc);
+  box-shadow: 0 0 8px var(--purple-acc);
+  animation: dotpulse 2.5s ease-in-out infinite;
+}
+@keyframes dotpulse { 0%,100%{box-shadow:0 0 6px var(--purple-acc)} 50%{box-shadow:0 0 14px var(--purple-acc)} }
+
+/* layout */
+#app {
+  position: relative; z-index: 1;
+  max-width: 880px; margin: 0 auto;
+  padding: 1.6rem 1.6rem 5rem;
+  opacity: 0; transform: translateY(10px);
+  transition: opacity .5s ease, transform .5s ease;
+}
+#app.show { opacity: 1; transform: none; }
+
+/* panelek */
+.panel {
+  background: var(--glass-bg);
+  backdrop-filter: blur(var(--glass-blur));
+  -webkit-backdrop-filter: blur(var(--glass-blur));
+  border: 1px solid var(--glass-border);
+  border-top: 1px solid rgba(255,255,255,0.09);
+  box-shadow: var(--glass-shadow);
+  border-radius: 18px;
+  padding: 1.5rem;
+  margin-bottom: 1.2rem;
+  transition: border-color .3s, box-shadow .3s;
+  position: relative; overflow: hidden;
+}
+.panel::before {
+  content: ''; position: absolute;
+  top: 0; left: 0; right: 0; height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent);
+  pointer-events: none;
+}
+.panel:hover {
+  border-color: rgba(124,58,237,0.3);
+  box-shadow: 0 12px 50px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.08);
+}
+
+.panel-header {
+  display: flex; align-items: center; gap: 10px;
+  margin-bottom: 1.2rem;
+}
+.panel-icon {
+  width: 32px; height: 32px; border-radius: 9px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: .85rem; flex-shrink: 0;
+}
+.panel-title {
+  font-family: 'Space Mono', monospace;
+  font-size: .66rem; font-weight: 700;
+  letter-spacing: .14em; color: var(--purple-light);
+  text-transform: uppercase;
+}
+
+/* Nav (nem google maps...)*/
+.main-tabs {
+  display: flex; gap: 5px; margin-bottom: 1.4rem;
+  background: var(--glass-bg);
+  backdrop-filter: blur(var(--glass-blur));
+  -webkit-backdrop-filter: blur(var(--glass-blur));
+  border: 1px solid var(--glass-border);
+  border-top: 1px solid rgba(255,255,255,0.08);
+  box-shadow: var(--glass-shadow);
+  border-radius: 14px; padding: 5px;
+}
+.main-tab {
+  flex: 1; padding: 9px 10px;
+  background: none; border: none; border-radius: 10px;
+  font-family: 'Space Mono', monospace; font-size: .62rem;
+  font-weight: 700; letter-spacing: .09em;
+  color: var(--white-muted); cursor: pointer;
+  transition: all .2s; text-transform: uppercase;
+  display: flex; align-items: center; justify-content: center; gap: 7px;
+}
+.main-tab i { font-size: .75rem; }
+.main-tab:hover { color: var(--white); background: rgba(255,255,255,0.04); }
+.main-tab.on {
+  background: rgba(124,58,237,0.2);
+  color: var(--purple-light);
+  border: 1px solid rgba(124,58,237,0.35);
+  box-shadow: 0 2px 12px rgba(124,58,237,0.15);
+}
+
+.page { display: none; }
+.page.on { display: block; }
+
+/* fields */
+.field { margin-bottom: 1rem; }
+.field label {
+  display: flex; align-items: center; gap: 6px;
+  font-size: .68rem; font-weight: 500;
+  letter-spacing: .07em; color: var(--white-muted);
+  text-transform: uppercase; margin-bottom: 6px;
+}
+.field label i { font-size: .7rem; color: var(--purple-light); opacity: .7; }
+
+input[type=text],input[type=email],input[type=password],
+input[type=datetime-local],textarea,select {
+  width: 100%;
+  background: rgba(8,12,48,0.6);
+  border: 1px solid rgba(255,255,255,0.07);
+  border-radius: 10px; padding: 10px 14px;
+  color: var(--white); font-family: 'Inter', sans-serif;
+  font-size: .88rem; outline: none;
+  transition: all .2s;
+  -webkit-user-select: text; user-select: text;
+  backdrop-filter: blur(8px);
+}
+input::placeholder,textarea::placeholder { color: var(--white-muted); opacity: .5; }
+input:focus,textarea:focus,select:focus {
+  border-color: rgba(124,58,237,0.6);
+  background: rgba(10,14,58,0.8);
+  box-shadow: 0 0 0 3px rgba(124,58,237,0.12);
+}
+select option { background: #0d1140; color: var(--white); }
+textarea { resize: vertical; min-height: 130px; line-height: 1.65; }
+.two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+
+/* API Key*/
+.input-group { display: flex; gap: 7px; }
+.input-group > div:first-child { flex: 1; position: relative; }
+.input-group input { padding-right: 40px; }
+.eye-btn {
+  position: absolute; right: 12px; top: 50%; transform: translateY(-50%);
+  background: none; border: none; cursor: pointer;
+  color: var(--white-muted); transition: color .2s; padding: 0;
+  font-size: .82rem;
+}
+.eye-btn:hover { color: var(--purple-light); }
+
+.chips-box {
+  background: rgba(8,12,48,0.6);
+  border: 1px solid rgba(255,255,255,0.07);
+  border-radius: 10px; padding: 9px 13px;
+  min-height: 76px; cursor: text; transition: all .2s;
+  backdrop-filter: blur(8px);
+}
+.chips-box:focus-within {
+  border-color: rgba(124,58,237,0.6);
+  box-shadow: 0 0 0 3px rgba(124,58,237,0.12);
+}
+.chips-wrap { display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 5px; }
+.chip {
+  display: flex; align-items: center; gap: 5px;
+  background: rgba(124,58,237,0.16);
+  border: 1px solid rgba(124,58,237,0.35);
+  border-radius: 7px; padding: 3px 8px 3px 10px;
+  font-size: .74rem; color: var(--purple-glow);
+  font-family: 'Space Mono', monospace;
+  animation: pop .18s ease;
+}
+@keyframes pop { from{transform:scale(.8);opacity:0} to{transform:scale(1);opacity:1} }
+.chip-x {
+  background: none; border: none; color: var(--purple-glow);
+  opacity: .4; cursor: pointer; font-size: .9rem;
+  padding: 0; line-height: 1; transition: opacity .15s;
+}
+.chip-x:hover { opacity: 1; }
+.chip-input {
+  background: none; border: none; outline: none;
+  color: var(--white); font-family: 'Inter', sans-serif;
+  font-size: .88rem; width: 100%; min-width: 180px;
+  -webkit-user-select: text; user-select: text;
+}
+.chip-input::placeholder { color: var(--white-muted); opacity: .45; }
+.field-meta {
+  text-align: right; font-size: .63rem;
+  color: var(--white-muted); font-family: 'Space Mono', monospace;
+  margin-top: 4px;
+}
+
+.tab-bar {
+  display: flex; gap: 3px;
+  background: rgba(8,12,48,0.5);
+  border-radius: 8px; padding: 3px; margin-bottom: 8px;
+}
+.tab {
+  flex: 1; padding: 7px;
+  background: none; border: none; border-radius: 6px;
+  font-family: 'Space Mono', monospace; font-size: .6rem;
+  font-weight: 700; letter-spacing: .09em;
+  color: var(--white-muted); cursor: pointer;
+  transition: all .18s; text-transform: uppercase;
+  display: flex; align-items: center; justify-content: center; gap: 5px;
+}
+.tab i { font-size: .7rem; }
+.tab.on {
+  background: rgba(124,58,237,0.2);
+  color: var(--purple-light);
+  border: 1px solid rgba(124,58,237,0.3);
+}
+textarea.html-ta { font-family: 'Space Mono', monospace; font-size: .77rem; }
+.preview-frame {
+  width: 100%; min-height: 180px;
+  border: 1px solid rgba(255,255,255,0.07);
+  border-radius: 10px; background: #1a1050; display: block;
+}
+
+/* drop cucc vagy mi */
+.drop-zone {
+  border: 1.5px dashed rgba(124,58,237,0.25);
+  border-radius: 11px; padding: 1.5rem;
+  text-align: center; cursor: pointer;
+  transition: all .25s; position: relative; overflow: hidden;
+}
+.drop-zone:hover,.drop-zone.over {
+  border-color: var(--purple-acc);
+  background: rgba(124,58,237,0.05);
+}
+.drop-zone input[type=file] {
+  position: absolute; inset: 0; opacity: 0;
+  cursor: pointer; width: 100%; height: 100%;
+}
+.drop-icon {
+  width: 44px; height: 44px; margin: 0 auto 10px;
+  background: rgba(124,58,237,0.12);
+  border: 1px solid rgba(124,58,237,0.2);
+  border-radius: 11px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.1rem; color: var(--purple-light);
+}
+.drop-text { font-size: .82rem; color: var(--white-muted); }
+.drop-text strong { color: var(--purple-light); font-weight: 600; }
+.file-list { display: flex; flex-direction: column; gap: 5px; margin-top: .65rem; }
+.file-row {
+  display: flex; align-items: center; justify-content: space-between;
+  background: rgba(124,58,237,0.07);
+  border: 1px solid rgba(124,58,237,0.16);
+  border-radius: 8px; padding: 7px 12px; animation: pop .18s ease;
+}
+.file-name {
+  color: var(--purple-glow); font-family: 'Space Mono', monospace;
+  font-size: .7rem; overflow: hidden; text-overflow: ellipsis;
+  white-space: nowrap; max-width: 55%;
+}
+.file-size { color: var(--white-muted); font-size: .68rem; flex-shrink: 0; }
+.file-del {
+  background: none; border: none; color: var(--white-muted);
+  cursor: pointer; font-size: .9rem; padding: 0;
+  transition: color .15s; margin-left: 8px; flex-shrink: 0;
+}
+.file-del:hover { color: var(--danger); }
+
+.send-btn {
+  width: 100%; padding: 14px 24px;
+  background: linear-gradient(135deg, var(--purple-mid), var(--blue-acc));
+  border: none; border-radius: 13px; color: white;
+  font-family: 'Space Mono', monospace; font-size: .82rem;
+  font-weight: 700; letter-spacing: .1em; cursor: pointer;
+  position: relative; overflow: hidden; transition: all .25s;
+  box-shadow: 0 4px 24px rgba(124,58,237,0.28);
+}
+.send-btn::after {
+  content: ''; position: absolute; inset: 0;
+  background: linear-gradient(135deg, rgba(255,255,255,0.1), transparent);
+  opacity: 0; transition: opacity .25s;
+}
+.send-btn:hover::after { opacity: 1; }
+.send-btn:hover { transform: translateY(-2px); box-shadow: 0 8px 32px rgba(124,58,237,0.42); }
+.send-btn:disabled { opacity: .45; cursor: not-allowed; transform: none; box-shadow: none; }
+.btn-inner {
+  display: flex; align-items: center; justify-content: center;
+  gap: 10px; position: relative; z-index: 1;
+}
+.spin {
+  width: 15px; height: 15px;
+  border: 2px solid rgba(255,255,255,0.25);
+  border-top-color: white; border-radius: 50%;
+  animation: rot .7s linear infinite; display: none;
+}
+@keyframes rot { to { transform: rotate(360deg) } }
+.sending .spin { display: block; }
+.sending .send-icon { display: none; }
+
+.action-btn {
+  padding: 8px 16px;
+  background: rgba(124,58,237,0.12);
+  border: 1px solid rgba(124,58,237,0.28);
+  border-radius: 9px; color: var(--purple-light);
+  font-family: 'Space Mono', monospace; font-size: .65rem;
+  font-weight: 700; letter-spacing: .08em; cursor: pointer;
+  transition: all .18s; display: inline-flex;
+  align-items: center; gap: 6px;
+}
+.action-btn i { font-size: .72rem; }
+.action-btn:hover {
+  background: rgba(124,58,237,0.24);
+  border-color: var(--purple-acc);
+  transform: translateY(-1px);
+}
+.action-btn.danger {
+  color: var(--danger);
+  border-color: rgba(244,63,94,0.25);
+  background: rgba(244,63,94,0.07);
+}
+.action-btn.danger:hover {
+  background: rgba(244,63,94,0.15);
+  border-color: var(--danger);
+}
+.action-btn.success-btn {
+  color: var(--success);
+  border-color: rgba(34,211,165,0.25);
+  background: rgba(34,211,165,0.07);
+}
+.action-btn.success-btn:hover {
+  background: rgba(34,211,165,0.15);
+  border-color: var(--success);
+}
+.btn-row { display: flex; gap: 8px; flex-wrap: wrap; }
+
+.saved-keys-list { display: flex; flex-direction: column; gap: 6px; margin-top: .8rem; }
+.key-item {
+  display: flex; align-items: center; gap: 10px;
+  background: rgba(124,58,237,0.06);
+  border: 1px solid rgba(124,58,237,0.15);
+  border-radius: 10px; padding: 10px 14px; animation: pop .18s ease;
+  transition: border-color .2s;
+}
+.key-item:hover { border-color: rgba(124,58,237,0.3); }
+.key-item-icon {
+  width: 30px; height: 30px; border-radius: 8px;
+  background: rgba(124,58,237,0.15);
+  display: flex; align-items: center; justify-content: center;
+  font-size: .75rem; color: var(--purple-light); flex-shrink: 0;
+}
+.key-item-info { flex: 1; min-width: 0; }
+.key-item-name {
+  font-size: .82rem; font-weight: 600;
+  color: var(--white); margin-bottom: 2px;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.key-item-preview {
+  font-family: 'Space Mono', monospace; font-size: .62rem;
+  color: var(--white-muted);
+}
+.key-item-btns { display: flex; gap: 5px; flex-shrink: 0; }
+.kbtn {
+  background: none; border: 1px solid rgba(124,58,237,0.22);
+  border-radius: 6px; padding: 4px 10px;
+  font-size: .63rem; font-family: 'Space Mono', monospace;
+  cursor: pointer; transition: all .15s;
+  display: inline-flex; align-items: center; gap: 5px;
+}
+.kbtn i { font-size: .68rem; }
+.kbtn.use { color: var(--purple-light); }
+.kbtn.use:hover { background: rgba(124,58,237,0.18); border-color: var(--purple-acc); }
+.kbtn.del { color: var(--danger); border-color: rgba(244,63,94,0.18); }
+.kbtn.del:hover { background: rgba(244,63,94,0.1); border-color: var(--danger); }
+
+.email-list { display: flex; flex-direction: column; gap: 5px; margin-top: .9rem; }
+.email-row {
+  display: flex; align-items: center; gap: 10px;
+  background: rgba(8,12,48,0.5);
+  border: 1px solid rgba(255,255,255,0.06);
+  border-radius: 10px; padding: 11px 14px; cursor: pointer;
+  transition: all .18s;
+}
+.email-row:hover {
+  border-color: rgba(124,58,237,0.3);
+  background: rgba(10,15,60,0.7);
+  transform: translateX(2px);
+}
+.email-row.selected {
+  border-color: rgba(124,58,237,0.55);
+  background: rgba(124,58,237,0.1);
+}
+.er-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+.er-to { font-size: .8rem; font-weight: 500; color: var(--white); flex: 1.2; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.er-subject { font-size: .74rem; color: var(--white-muted); flex: 2; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.er-date { font-family: 'Space Mono', monospace; font-size: .6rem; color: var(--white-muted); flex-shrink: 0; }
+
+.detail-row { display: flex; gap: 10px; margin-bottom: 7px; align-items: flex-start; }
+.detail-label {
+  font-family: 'Space Mono', monospace; font-size: .6rem;
+  color: var(--white-muted); text-transform: uppercase;
+  min-width: 84px; flex-shrink: 0; padding-top: 3px;
+  display: flex; align-items: center; gap: 5px;
+}
+.detail-label i { font-size: .62rem; color: var(--purple-light); opacity: .6; }
+.detail-val {
+  font-size: .82rem; color: var(--white);
+  word-break: break-all; -webkit-user-select: text; user-select: text;
+}
+.detail-id {
+  font-family: 'Space Mono', monospace; font-size: .68rem;
+  color: var(--purple-glow); word-break: break-all;
+  -webkit-user-select: text; user-select: text;
+}
+
+.badge {
+  display: inline-flex; align-items: center; gap: 5px;
+  padding: 3px 9px; border-radius: 6px;
+  font-family: 'Space Mono', monospace;
+  font-size: .6rem; font-weight: 700; letter-spacing: .06em;
+}
+.badge i { font-size: .62rem; }
+.badge.sent     { background:rgba(34,211,165,0.1); color:var(--success); border:1px solid rgba(34,211,165,0.22); }
+.badge.delivered{ background:rgba(34,211,165,0.1); color:var(--success); border:1px solid rgba(34,211,165,0.22); }
+.badge.scheduled{ background:rgba(56,189,248,0.1); color:var(--cyan);    border:1px solid rgba(56,189,248,0.22); }
+.badge.cancelled{ background:rgba(244,63,94,0.1);  color:var(--danger);  border:1px solid rgba(244,63,94,0.22); }
+.badge.queued   { background:rgba(167,139,250,0.1);color:var(--purple-light);border:1px solid rgba(167,139,250,0.22); }
+.badge.bounced  { background:rgba(244,63,94,0.1);  color:var(--danger);  border:1px solid rgba(244,63,94,0.22); }
+
+.empty { text-align: center; padding: 3rem 1rem; color: var(--white-muted); font-size: .82rem; }
+.empty i { font-size: 2.2rem; opacity: .25; margin-bottom: .9rem; display: block; color: var(--purple-light); }
+
+.divider { border: none; border-top: 1px solid rgba(255,255,255,0.05); margin: 1rem 0; }
+
+/* Toasts for breakfast🥐*/
+#toasts {
+  position: fixed; bottom: 1.5rem; right: 1.5rem;
+  display: flex; flex-direction: column; gap: 8px; z-index: 9999;
+}
+.toast {
+  display: flex; align-items: center; gap: 10px;
+  background: rgba(8,12,48,0.92);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 12px; padding: 12px 18px;
+  font-size: .83rem; color: var(--white);
+  min-width: 270px; max-width: 340px;
+  animation: tin .32s cubic-bezier(.175,.885,.32,1.275);
+  box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+}
+.toast i { font-size: 1rem; flex-shrink: 0; }
+.toast.ok  i { color: var(--success); }
+.toast.err i { color: var(--danger); }
+@keyframes tin  { from{transform:translateX(110%) scale(.9);opacity:0} to{transform:none;opacity:1} }
+.toast.out { animation: tout .25s ease forwards; }
+@keyframes tout { to{transform:translateX(110%);opacity:0} }
+</style>
+</head>
+<body>
+
+<!-- hatter de gondolom erre rajottel-->
+<div class="orb orb1"></div>
+<div class="orb orb2"></div>
+<div class="orb orb3"></div>
+<div class="bg-video-wrap">
+  <video autoplay muted loop playsinline>
+    <source src="Wallpaper.mp4" type="video/mp4">
+  </video>
+</div>
+<div class="bg-overlay"></div>
+
+<div id="loading-screen">
+  <div class="loader-logo">MAIL<span>VOID</span></div>
+  <div class="loader-bar-wrap">
+    <div class="loader-bar"></div>
+  </div>
+  <div class="loader-sub">Loading…</div>
+</div>
+
+<!-- UDV! -->
+<div id="welcome-screen">
+  <div class="welcome-glass">
+    <div class="wlc-icon"><i class="fa-solid fa-paper-plane"></i></div>
+    <div class="wlc-title">MAIL<span>VOID</span></div>
+    <p class="wlc-sub">Powered by Devnixhu. Send emails, manage batches, track delivery via Resend — all from one place.</p>
+    <div class="wlc-features">
+      <div class="wlc-feat"><i class="fa-solid fa-bolt"></i> Batch Send</div>
+      <div class="wlc-feat"><i class="fa-solid fa-key"></i> Saved Keys</div>
+      <div class="wlc-feat"><i class="fa-solid fa-inbox"></i> Email Tracking</div>
+      <div class="wlc-feat"><i class="fa-solid fa-paperclip"></i> Attachments</div>
+    </div>
+    <button class="wlc-btn" onclick="enterApp()">
+      <i class="fa-solid fa-arrow-right-to-bracket"></i> GET STARTED
+    </button>
+  </div>
+</div>
+
+<div class="titlebar">
+  <div class="titlebar-dot"></div>
+  <span class="titlebar-logo">MAIL<span>VOID</span></span>
+</div>
+
+<div id="app">
+
+  <!-- nav. still not google maps...-->
+  <div class="main-tabs">
+    <button class="main-tab on" onclick="mainTab('compose')">
+      <i class="fa-solid fa-pen-to-square"></i> Compose
+    </button>
+    <button class="main-tab" onclick="mainTab('emails')">
+      <i class="fa-solid fa-inbox"></i> Sent Emails
+    </button>
+    <button class="main-tab" onclick="mainTab('keys')">
+      <i class="fa-solid fa-key"></i> API Keys
+    </button>
+  </div>
+
+  <!-- Minden is -->
+  <div class="page on" id="page-compose">
+
+    <div class="panel">
+      <div class="panel-header">
+        <div class="panel-icon" style="background:rgba(124,58,237,0.2)"><i class="fa-solid fa-gear" style="color:var(--purple-light)"></i></div>
+        <span class="panel-title">Configuration</span>
+      </div>
+      <div class="two-col">
+        <div class="field">
+          <label><i class="fa-solid fa-key"></i> Resend API Key</label>
+          <div class="input-group">
+            <div>
+              <input type="password" id="apiKey" placeholder="re_xxxxxxxxxxxxxxxxx" autocomplete="off">
+              <button class="eye-btn" onclick="toggleKey()" tabindex="-1">
+                <i class="fa-solid fa-eye" id="eyeIcon"></i>
+              </button>
+            </div>
+            <select id="keySel" onchange="pickSavedKey()" style="width:auto;min-width:120px">
+              <option value="">Saved…</option>
+            </select>
+          </div>
+        </div>
+        <div class="field">
+          <label><i class="fa-solid fa-user"></i> Sender Name</label>
+          <input type="text" id="senderName" placeholder="Alan Turing">
+        </div>
+      </div>
+      <div class="field" style="margin-bottom:0">
+        <label><i class="fa-solid fa-at"></i> Sender Email</label>
+        <input type="email" id="senderEmail" placeholder="alan@example.com">
+      </div>
+    </div>
+
+    <!-- Adresses -->
+    <div class="panel">
+      <div class="panel-header">
+        <div class="panel-icon" style="background:rgba(56,189,248,0.15)"><i class="fa-solid fa-users" style="color:var(--cyan)"></i></div>
+        <span class="panel-title">Recipients</span>
+      </div>
+      <div class="field" style="margin-bottom:0">
+        <label><i class="fa-solid fa-envelope"></i> Mailing Addresses <span style="opacity:.4;font-size:.62rem;text-transform:none;font-weight:400">(Enter / comma)</span></label>
+        <div class="chips-box" onclick="document.getElementById('chipIn').focus()">
+          <div class="chips-wrap" id="chipsWrap"></div>
+          <input class="chip-input" id="chipIn" type="email" placeholder="alan@example.com">
+        </div>
+        <div class="field-meta" id="recCount">0 recipients</div>
+      </div>
+    </div>
+
+    <!-- Content -->
+    <div class="panel">
+      <div class="panel-header">
+        <div class="panel-icon" style="background:rgba(42,77,232,0.2)"><i class="fa-solid fa-file-lines" style="color:var(--cyan)"></i></div>
+        <span class="panel-title">Email Content</span>
+      </div>
+      <div class="field">
+        <label><i class="fa-solid fa-heading"></i> Subject</label>
+        <input type="text" id="subject" placeholder="Your subject line…">
+      </div>
+      <div class="field" style="margin-bottom:0">
+        <label><i class="fa-solid fa-align-left"></i> Body</label>
+        <div class="tab-bar">
+          <button class="tab on" id="tWrite" onclick="tab('write')"><i class="fa-solid fa-pen"></i> Text</button>
+          <button class="tab"    id="tHtml"  onclick="tab('html')"><i class="fa-brands fa-html5"></i> HTML</button>
+          <button class="tab"    id="tPrev"  onclick="tab('prev')"><i class="fa-solid fa-eye"></i> Preview</button>
+        </div>
+        <div id="pWrite"><textarea id="bodyTxt" placeholder="Write your email…"></textarea></div>
+        <div id="pHtml" style="display:none"><textarea id="bodyHtml" class="html-ta" placeholder="<html>&#10;  <body>&#10;    <h1>Hello!</h1>&#10;  </body>&#10;</html>"></textarea></div>
+        <div id="pPrev" style="display:none"><iframe class="preview-frame" id="prevFrame" sandbox="allow-same-origin"></iframe></div>
+        <div class="field-meta" id="charCount">0 characters</div>
+      </div>
+    </div>
+
+    <!-- Things images, videos ect... -->
+    <div class="panel">
+      <div class="panel-header">
+        <div class="panel-icon" style="background:rgba(232,121,249,0.15)"><i class="fa-solid fa-paperclip" style="color:#e879f9"></i></div>
+        <span class="panel-title">Attachments</span>
+      </div>
+      <div class="drop-zone" id="dropZone">
+        <input type="file" id="fileIn" multiple onchange="addFiles(this.files)">
+        <div class="drop-icon"><i class="fa-solid fa-cloud-arrow-up"></i></div>
+        <div class="drop-text"><strong>Click to upload</strong> or drag & drop<br><span style="font-size:.7rem;opacity:.5">Max 25 MB · Any format</span></div>
+      </div>
+      <div class="file-list" id="fileList"></div>
+    </div>
+
+    <!-- Send -->
+    <div class="panel" style="margin-bottom:0">
+      <button class="send-btn" id="sendBtn" onclick="send()">
+        <div class="btn-inner">
+          <div class="spin"></div>
+          <i class="fa-solid fa-paper-plane send-icon"></i>
+          <span id="btnLbl">SEND EMAIL</span>
+        </div>
+      </button>
+    </div>
+
+  </div>
+
+  <!-- sent mails-->
+  <div class="page" id="page-emails">
+
+    <div class="panel">
+      <div class="panel-header">
+        <div class="panel-icon" style="background:rgba(56,189,248,0.15)"><i class="fa-solid fa-inbox" style="color:var(--cyan)"></i></div>
+        <span class="panel-title">Sent Emails</span>
+      </div>
+      <div style="display:flex;gap:8px;align-items:center">
+        <select id="emailsKeySel" style="flex:1">
+          <option value="">Select API key…</option>
+        </select>
+        <button class="action-btn" onclick="loadEmails()">
+          <i class="fa-solid fa-rotate-right"></i> Refresh
+        </button>
+      </div>
+      <div id="emailListWrap">
+        <div class="empty"><i class="fa-solid fa-envelope-open"></i>Select an API key and click Refresh</div>
+      </div>
+    </div>
+
+    <!-- info -->
+    <div class="panel" id="detailPanel" style="display:none">
+      <div class="panel-header">
+        <div class="panel-icon" style="background:rgba(42,77,232,0.2)"><i class="fa-solid fa-circle-info" style="color:var(--cyan)"></i></div>
+        <span class="panel-title" id="detailTitle">Email Detail</span>
+        <span style="margin-left:auto" id="detailBadge"></span>
+      </div>
+      <div id="detailBody"></div>
+      <div class="btn-row" style="margin-top:1.1rem" id="detailActions"></div>
+
+      <div id="rescheduleBox" style="display:none;margin-top:1rem">
+        <hr class="divider">
+        <div class="field">
+          <label><i class="fa-solid fa-clock"></i> New Scheduled Time</label>
+          <input type="datetime-local" id="rescheduleTime">
+        </div>
+        <button class="action-btn success-btn" onclick="doUpdate()">
+          <i class="fa-solid fa-check"></i> Confirm Reschedule
+        </button>
+      </div>
+
+      <div id="attachBox" style="display:none;margin-top:1rem">
+        <hr class="divider">
+        <div style="font-family:'Space Mono',monospace;font-size:.62rem;color:var(--white-muted);text-transform:uppercase;letter-spacing:.1em;margin-bottom:.7rem">
+          <i class="fa-solid fa-paperclip" style="margin-right:5px;color:var(--purple-light)"></i>Attachments
+        </div>
+        <div id="attachList"></div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Saved API Keys <---kedvencem  -->
+  <div class="page" id="page-keys">
+
+    <div class="panel">
+      <div class="panel-header">
+        <div class="panel-icon" style="background:rgba(124,58,237,0.2)"><i class="fa-solid fa-key" style="color:var(--purple-light)"></i></div>
+        <span class="panel-title">Saved API Keys</span>
+      </div>
+      <p style="font-size:.8rem;color:var(--white-muted);margin-bottom:1.2rem;line-height:1.6">
+        <i class="fa-solid fa-lock" style="color:var(--purple-light);margin-right:6px;opacity:.7"></i>
+        Keys are stored locally on your device and never leave your machine.
+      </p>
+      <div class="two-col" style="margin-bottom:.7rem">
+        <div class="field" style="margin-bottom:0">
+          <label><i class="fa-solid fa-tag"></i> Key Name</label>
+          <input type="text" id="newKeyName" placeholder="Production Key">
+        </div>
+        <div class="field" style="margin-bottom:0">
+          <label><i class="fa-solid fa-key"></i> API Key</label>
+          <input type="password" id="newKeyVal" placeholder="re_xxxxxxxxxxxxxxxxx">
+        </div>
+      </div>
+      <button class="action-btn" onclick="saveNewKey()" style="margin-top:.4rem">
+        <i class="fa-solid fa-plus"></i> Save Key
+      </button>
+
+      <div id="keysListWrap" style="margin-top:1.3rem">
+        <div class="empty"><i class="fa-solid fa-key"></i>No saved keys yet</div>
+      </div>
+    </div>
+
+  </div>
+
+</div>
+<div id="toasts"></div>
+
+<script>
+let recipients = [];
+let files = [];
+let curTab = 'write';
+let savedKeys = [];
+let selectedEmailId = null;
+let selectedEmailApiKey = null;
+const WELCOME_KEY = 'mv_welcomed';
+
+window.addEventListener('DOMContentLoaded', () => {
+  // fade after loading
+  setTimeout(() => {
+    document.getElementById('loading-screen').classList.add('hide');
+    const welcomed = localStorage.getItem ? localStorage.getItem(WELCOME_KEY) : null;
+    if (welcomed) {
+      showApp();
+    } else {
+      document.getElementById('welcome-screen').classList.add('show');
+    }
+  }, 1800);
+});
+
+function enterApp() {
+  try { localStorage.setItem(WELCOME_KEY, '1'); } catch(e){}
+  document.getElementById('welcome-screen').classList.remove('show');
+  showApp();
+}
+
+function showApp() {
+  const app = document.getElementById('app');
+  app.classList.add('show');
+}
+
+function mainTab(name) {
+  const names = ['compose','emails','keys'];
+  document.querySelectorAll('.main-tab').forEach((b,i) => b.classList.toggle('on', names[i] === name));
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('on'));
+  document.getElementById('page-'+name).classList.add('on');
+  if (name === 'keys') renderKeysList();
+}
+
+// Keys
+async function loadSavedKeys() {
+  if (!window.pywebview) return;
+  try {
+    const r = await window.pywebview.api.get_saved_keys();
+    savedKeys = JSON.parse(r);
+  } catch(e) { savedKeys = []; }
+  refreshKeySelects();
+}
+
+function refreshKeySelects() {
+  ['keySel','emailsKeySel'].forEach(id => {
+    const sel = document.getElementById(id);
+    const blank = id === 'keySel' ? 'Saved…' : 'Select API key…';
+    sel.innerHTML = `<option value="">${blank}</option>` +
+      savedKeys.map(k => `<option value="${k.key}">${k.name}</option>`).join('');
+  });
+  renderKeysList();
+}
+
+function renderKeysList() {
+  const wrap = document.getElementById('keysListWrap');
+  if (!savedKeys.length) {
+    wrap.innerHTML = '<div class="empty"><i class="fa-solid fa-key"></i>No saved keys yet</div>';
+    return;
+  }
+  wrap.innerHTML = '<div class="saved-keys-list">' +
+    savedKeys.map(k => `
+      <div class="key-item">
+        <div class="key-item-icon"><i class="fa-solid fa-key"></i></div>
+        <div class="key-item-info">
+          <div class="key-item-name">${escHtml(k.name)}</div>
+          <div class="key-item-preview">${k.key.slice(0,8)}••••${k.key.slice(-4)}</div>
+        </div>
+        <div class="key-item-btns">
+          <button class="kbtn use" onclick="useKey('${escHtml(k.key)}')"><i class="fa-solid fa-arrow-up-right-from-square"></i> Use</button>
+          <button class="kbtn del" onclick="deleteKey('${escHtml(k.name)}')"><i class="fa-solid fa-trash"></i></button>
+        </div>
+      </div>`).join('') + '</div>';
+}
+
+function pickSavedKey() {
+  const val = document.getElementById('keySel').value;
+  if (val) document.getElementById('apiKey').value = val;
+}
+function useKey(key) {
+  document.getElementById('apiKey').value = key;
+  mainTab('compose');
+  toast('Key loaded', 'ok');
+}
+
+async function saveNewKey() {
+  const name = document.getElementById('newKeyName').value.trim();
+  const key  = document.getElementById('newKeyVal').value.trim();
+  if (!name || !key) return toast('Fill in both fields', 'err');
+  const r = await window.pywebview.api.save_key(JSON.stringify({name, key}));
+  const d = JSON.parse(r);
+  if (d.ok) {
+    document.getElementById('newKeyName').value = '';
+    document.getElementById('newKeyVal').value = '';
+    await loadSavedKeys();
+    toast('Key saved', 'ok');
+  } else toast('Error: '+d.error, 'err');
+}
+
+async function deleteKey(name) {
+  const r = await window.pywebview.api.delete_key(name);
+  const d = JSON.parse(r);
+  if (d.ok) { await loadSavedKeys(); toast('Key deleted', 'ok'); }
+  else toast('Error: '+d.error, 'err');
+}
+
+// Adresses
+const ci = document.getElementById('chipIn');
+ci.addEventListener('keydown', e => {
+  if (['Enter',',',';','Tab'].includes(e.key)) { e.preventDefault(); addRec(ci.value.trim().replace(/[,;]$/,'')); }
+  if (e.key === 'Backspace' && !ci.value && recipients.length) delRec(recipients.length-1);
+});
+ci.addEventListener('blur', () => { if (ci.value.trim()) addRec(ci.value.trim()); });
+
+function validEmail(e) { return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e); }
+function addRec(email) {
+  if (!email) return;
+  if (!validEmail(email)) { toast('Invalid email: '+email, 'err'); ci.value=''; return; }
+  if (recipients.includes(email)) { toast('Already added', 'err'); ci.value=''; return; }
+  recipients.push(email); renderChips(); ci.value='';
+}
+function delRec(i) { recipients.splice(i,1); renderChips(); }
+function renderChips() {
+  document.getElementById('chipsWrap').innerHTML = recipients.map((e,i) =>
+    `<div class="chip">${e}<button class="chip-x" onclick="delRec(${i})">×</button></div>`).join('');
+  document.getElementById('recCount').textContent = recipients.length + ' recipient' + (recipients.length!==1?'s':'');
+}
+
+// Content Tabs
+function tab(t) {
+  curTab = t;
+  ['write','html','prev'].forEach(x => {
+    const up = x[0].toUpperCase()+x.slice(1);
+    document.getElementById('p'+up).style.display = x===t ? 'block' : 'none';
+    document.getElementById('t'+up).classList.toggle('on', x===t);
+  });
+  if (t==='prev') renderPreview();
+}
+function renderPreview() {
+  const f = document.getElementById('prevFrame');
+  const doc = f.contentDocument || f.contentWindow.document;
+  doc.open(); doc.write(getHtml()); doc.close();
+}
+function getHtml() {
+  const h = document.getElementById('bodyHtml').value.trim();
+  if (h) return h;
+  const t = document.getElementById('bodyTxt').value;
+  return `<html><body style="font-family:sans-serif;padding:24px;color:#f0f0ff;background:#0d0f2a">${t.replace(/\n/g,'<br>')}</body></html>`;
+}
+document.getElementById('bodyTxt').addEventListener('input', function(){ document.getElementById('charCount').textContent = this.value.length+' characters'; });
+document.getElementById('bodyHtml').addEventListener('input', function(){ document.getElementById('charCount').textContent = this.value.length+' characters'; });
+
+// files, mert miért ne
+const dz = document.getElementById('dropZone');
+dz.addEventListener('dragover', e=>{ e.preventDefault(); dz.classList.add('over'); });
+dz.addEventListener('dragleave', ()=>dz.classList.remove('over'));
+dz.addEventListener('drop', e=>{ e.preventDefault(); dz.classList.remove('over'); addFiles(e.dataTransfer.files); });
+
+function addFiles(flist) {
+  Array.from(flist).forEach(f => {
+    if (f.size > 25*1024*1024) { toast(f.name+' is too large (max 25MB)', 'err'); return; }
+    if (files.find(x=>x.name===f.name)) { toast(f.name+' already added', 'err'); return; }
+    files.push(f);
+  });
+  renderFiles(); document.getElementById('fileIn').value='';
+}
+function delFile(i) { files.splice(i,1); renderFiles(); }
+function fmt(b) { if(b<1024)return b+' B'; if(b<1048576)return(b/1024).toFixed(1)+' KB'; return(b/1048576).toFixed(1)+' MB'; }
+function renderFiles() {
+  document.getElementById('fileList').innerHTML = files.map((f,i) =>
+    `<div class="file-row">
+      <span class="file-name"><i class="fa-solid fa-paperclip" style="margin-right:5px;opacity:.6"></i>${f.name}</span>
+      <span class="file-size">${fmt(f.size)}</span>
+      <button class="file-del" onclick="delFile(${i})"><i class="fa-solid fa-xmark"></i></button>
+    </div>`).join('');
+}
+
+function toggleKey() {
+  const i = document.getElementById('apiKey');
+  const eye = document.getElementById('eyeIcon');
+  i.type = i.type==='password' ? 'text' : 'password';
+  eye.className = i.type==='password' ? 'fa-solid fa-eye' : 'fa-solid fa-eye-slash';
+}
+
+// send es tarcsazzuk pythont
+async function b64(file) {
+  return new Promise((res,rej) => {
+    const r = new FileReader();
+    r.onload = ()=>res(r.result.split(',')[1]);
+    r.onerror = rej;
+    r.readAsDataURL(file);
+  });
+}
+
+async function send() {
+  const apiKey      = document.getElementById('apiKey').value.trim();
+  const senderName  = document.getElementById('senderName').value.trim();
+  const senderEmail = document.getElementById('senderEmail').value.trim();
+  const subject     = document.getElementById('subject').value.trim();
+  const htmlBody    = getHtml();
+
+  if (!apiKey)            return toast('Enter your API key', 'err');
+  if (!senderEmail)       return toast('Enter sender email', 'err');
+  if (!recipients.length) return toast('Add at least one recipient', 'err');
+  if (!subject)           return toast('Enter a subject', 'err');
+  if (!htmlBody.trim())   return toast('Email body is empty', 'err');
+
+  const btn = document.getElementById('sendBtn');
+  btn.disabled = true; btn.classList.add('sending');
+  document.getElementById('btnLbl').textContent = 'SENDING…';
+
+  try {
+    const attachments = await Promise.all(files.map(async f=>({filename:f.name,content:await b64(f)})));
+    const payload = JSON.stringify({apiKey,senderName,senderEmail,recipients,subject,htmlBody,attachments});
+    const result = await window.pywebview.api.send(payload);
+    if (!result) throw new Error('No response from backend');
+    const data = JSON.parse(result);
+    if (data.ok) toast(`Sent to ${data.recipients} recipient${data.recipients!==1?'s':''}!`, 'ok');
+    else toast('Error: '+(data.error||'Unknown error'), 'err');
+  } catch(err) { toast('Error: '+err.message, 'err'); }
+  finally {
+    btn.disabled = false; btn.classList.remove('sending');
+    document.getElementById('btnLbl').textContent = 'SEND EMAIL';
+  }
+}
+
+// Emails 
+async function loadEmails() {
+  const apiKey = document.getElementById('emailsKeySel').value;
+  if (!apiKey) return toast('Select an API key first', 'err');
+  selectedEmailApiKey = apiKey;
+  document.getElementById('emailListWrap').innerHTML =
+    '<div class="empty"><i class="fa-solid fa-spinner fa-spin"></i>Loading…</div>';
+  document.getElementById('detailPanel').style.display = 'none';
+  try {
+    const r = await window.pywebview.api.list_emails(apiKey);
+    const d = JSON.parse(r);
+    if (!d.ok) throw new Error(d.error);
+    renderEmailList(d.emails||[]);
+  } catch(e) {
+    toast('Error: '+e.message, 'err');
+    document.getElementById('emailListWrap').innerHTML =
+      `<div class="empty"><i class="fa-solid fa-triangle-exclamation"></i>${e.message}</div>`;
+  }
+}
+
+function statusColor(s) {
+  if (!s) return 'var(--white-muted)';
+  s = s.toLowerCase();
+  if (s==='sent'||s==='delivered') return 'var(--success)';
+  if (s==='scheduled') return 'var(--cyan)';
+  if (s==='cancelled'||s==='bounced') return 'var(--danger)';
+  return 'var(--purple-light)';
+}
+function statusBadge(s) {
+  if (!s) return '';
+  const cl = s.toLowerCase().replace(/[^a-z]/g,'');
+  const icons = {sent:'fa-check',delivered:'fa-check',scheduled:'fa-clock',cancelled:'fa-xmark',bounced:'fa-xmark',queued:'fa-hourglass-half'};
+  const ic = icons[cl]||'fa-circle';
+  return `<span class="badge ${cl}"><i class="fa-solid ${ic}"></i>${s}</span>`;
+}
+
+function renderEmailList(emails) {
+  if (!emails.length) {
+    document.getElementById('emailListWrap').innerHTML = '<div class="empty"><i class="fa-regular fa-envelope-open"></i>No emails found</div>';
+    return;
+  }
+  let html = '<div class="email-list">';
+  emails.forEach(e => {
+    const to = Array.isArray(e.to) ? e.to.join(', ') : e.to||'';
+    const date = e.created_at ? new Date(e.created_at).toLocaleDateString('hu-HU',{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'}) : '';
+    html += `<div class="email-row" id="er-${e.id}" onclick="selectEmail('${e.id}')">
+      <span class="er-dot" style="background:${statusColor(e.last_event)};box-shadow:0 0 6px ${statusColor(e.last_event)}"></span>
+      <span class="er-to">${escHtml(to)}</span>
+      <span class="er-subject">${escHtml(e.subject||'')}</span>
+      <span class="er-date">${date}</span>
+    </div>`;
+  });
+  html += '</div>';
+  document.getElementById('emailListWrap').innerHTML = html;
+}
+
+async function selectEmail(id) {
+  document.querySelectorAll('.email-row').forEach(r => r.classList.toggle('selected', r.id==='er-'+id));
+  selectedEmailId = id;
+  const panel = document.getElementById('detailPanel');
+  panel.style.display = 'block';
+  document.getElementById('detailBody').innerHTML = '<div style="color:var(--white-muted);font-size:.8rem;padding:.5rem 0"><i class="fa-solid fa-spinner fa-spin" style="margin-right:6px"></i>Loading…</div>';
+  document.getElementById('detailActions').innerHTML = '';
+  document.getElementById('rescheduleBox').style.display = 'none';
+  document.getElementById('attachBox').style.display = 'none';
+  try {
+    const r = await window.pywebview.api.get_email(JSON.stringify({apiKey:selectedEmailApiKey, emailId:id}));
+    const d = JSON.parse(r);
+    if (!d.ok) throw new Error(d.error);
+    renderDetail(d.email);
+  } catch(e) {
+    document.getElementById('detailBody').innerHTML = `<span style="color:var(--danger)"><i class="fa-solid fa-triangle-exclamation" style="margin-right:6px"></i>${e.message}</span>`;
+  }
+}
+
+function renderDetail(e) {
+  document.getElementById('detailTitle').textContent = e.subject || 'Email Detail';
+  document.getElementById('detailBadge').innerHTML = statusBadge(e.last_event||e.status||'');
+  const rows = [
+    ['fa-fingerprint','ID',     `<span class="detail-id">${e.id||''}</span>`],
+    ['fa-paper-plane', 'From',  escHtml(e.from||'')],
+    ['fa-at',          'To',    escHtml(Array.isArray(e.to)?e.to.join(', '):e.to||'')],
+    ['fa-heading',     'Subject', escHtml(e.subject||'')],
+    ['fa-circle-dot',  'Status', e.last_event||e.status||'–'],
+    ['fa-calendar',    'Sent at', e.created_at?new Date(e.created_at).toLocaleString('hu-HU'):'–'],
+  ];
+  if (e.scheduled_at) rows.push(['fa-clock','Scheduled', new Date(e.scheduled_at).toLocaleString('hu-HU')]);
+  document.getElementById('detailBody').innerHTML = rows.map(([ic,l,v]) =>
+    `<div class="detail-row">
+      <span class="detail-label"><i class="fa-solid ${ic}"></i>${l}</span>
+      <span class="detail-val">${v}</span>
+    </div>`).join('');
+
+  const s = ((e.last_event||e.status)||'').toLowerCase();
+  let btns = '';
+  if (s==='scheduled'||s==='queued') {
+    btns += `<button class="action-btn" onclick="toggleReschedule()"><i class="fa-solid fa-clock"></i> Reschedule</button>`;
+    btns += `<button class="action-btn danger" onclick="doCancel()"><i class="fa-solid fa-xmark"></i> Cancel</button>`;
+  }
+  btns += `<button class="action-btn" onclick="loadAttachments()"><i class="fa-solid fa-paperclip"></i> Attachments</button>`;
+  document.getElementById('detailActions').innerHTML = btns;
+}
+
+function toggleReschedule() {
+  const box = document.getElementById('rescheduleBox');
+  box.style.display = box.style.display==='none' ? 'block' : 'none';
+}
+
+async function doCancel() {
+  if (!selectedEmailId) return;
+  try {
+    const r = await window.pywebview.api.cancel_email(JSON.stringify({apiKey:selectedEmailApiKey, emailId:selectedEmailId}));
+    const d = JSON.parse(r);
+    if (d.ok) { toast('Email cancelled', 'ok'); loadEmails(); }
+    else toast('Error: '+d.error, 'err');
+  } catch(e) { toast('Error: '+e.message, 'err'); }
+}
+
+async function doUpdate() {
+  if (!selectedEmailId) return;
+  const t = document.getElementById('rescheduleTime').value;
+  if (!t) return toast('Pick a date/time', 'err');
+  try {
+    const r = await window.pywebview.api.update_email(JSON.stringify({apiKey:selectedEmailApiKey, emailId:selectedEmailId, scheduledAt:new Date(t).toISOString()}));
+    const d = JSON.parse(r);
+    if (d.ok) { toast('Rescheduled', 'ok'); document.getElementById('rescheduleBox').style.display='none'; loadEmails(); }
+    else toast('Error: '+d.error, 'err');
+  } catch(e) { toast('Error: '+e.message, 'err'); }
+}
+
+async function loadAttachments() {
+  const box = document.getElementById('attachBox');
+  box.style.display = 'block';
+  document.getElementById('attachList').innerHTML = '<div style="color:var(--white-muted);font-size:.78rem"><i class="fa-solid fa-spinner fa-spin" style="margin-right:5px"></i>Loading…</div>';
+  try {
+    const r = await window.pywebview.api.list_attachments(JSON.stringify({apiKey:selectedEmailApiKey, emailId:selectedEmailId}));
+    const d = JSON.parse(r);
+    if (!d.ok) throw new Error(d.error);
+    const att = d.attachments||[];
+    if (!att.length) { document.getElementById('attachList').innerHTML = '<div style="color:var(--white-muted);font-size:.78rem">No attachments</div>'; return; }
+    document.getElementById('attachList').innerHTML = att.map(a =>
+      `<div class="file-row">
+        <span class="file-name"><i class="fa-solid fa-paperclip" style="margin-right:5px;opacity:.6"></i>${escHtml(a.filename||a.id)}</span>
+        <span class="file-size">${a.size?fmt(a.size):''}</span>
+      </div>`).join('');
+  } catch(e) { document.getElementById('attachList').innerHTML = `<span style="color:var(--danger)">${e.message}</span>`; }
+}
+
+function escHtml(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+function toast(msg, type='ok') {
+  const c = document.getElementById('toasts');
+  const el = document.createElement('div');
+  el.className = `toast ${type}`;
+  const ic = type==='ok' ? 'fa-circle-check' : 'fa-circle-exclamation';
+  el.innerHTML = `<i class="fa-solid ${ic}"></i><span>${msg}</span>`;
+  c.appendChild(el);
+  setTimeout(()=>{ el.classList.add('out'); setTimeout(()=>el.remove(), 280); }, 4000);
+}
+
+// pywebview
+window.addEventListener('pywebviewready', loadSavedKeys);
+if (window.pywebview) loadSavedKeys();
+</script>
+</body>
+</html>
