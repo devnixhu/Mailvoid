@@ -57,7 +57,7 @@ cd mailvoid
 pip install pywebview resend
 
 # 3. Run
-python app.py
+python Mailvoid.py
 ```
 
 ---
@@ -75,8 +75,8 @@ python app.py
 
 ```
 mailvoid/
-├── app.py            # Python backend — pywebview + Resend API
-├── index.html        # Frontend — HTML / CSS / JS
+├── Mailvoid.py            # Python backend — pywebview + Resend API
+├── Mailvoid.html        # Frontend — HTML / CSS / JS
 ├── saved_keys.json   # Auto-created — local API key storage
 └── Wallpaper.mp4     # Background video (optional)
 ```
